@@ -221,7 +221,7 @@ class AbstractVideo(CollectionMember, index.Indexed, models.Model):
                 transcode.file = 'video_transcodes/' + new_name
             elif media_format is MediaFormats.webm:
                 raw_name = transcode.video.filename(include_ext=False)
-                new_name = raw_name + '.mp4'
+                new_name = raw_name + '.webm'
                 transcode.file = 'video_transcodes/' + new_name
             transcode.processing = False
             transcode.error_messages = ''
