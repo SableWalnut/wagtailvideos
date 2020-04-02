@@ -214,16 +214,31 @@ class AbstractVideo(CollectionMember, index.Indexed, models.Model):
         transcode, created = self.transcodes.get_or_create(
             media_format=media_format,
         )
-        if created or transcode.processing is False:
-            transcode.processing = True
+        if settings.VIDEOS_USE_ELASTIC_TRANSCODE:
+            if media_format is MediaFormats.mp4:
+                raw_name = transcode.video.filename(include_ext=False)
+                new_name = raw_name + '.mp4'
+                transcode.file = 'video_transcodes/' + new_name
+            elif media_format is MediaFormats.webm:
+                raw_name = transcode.video.filename(include_ext=False)
+                new_name = raw_name + '.mp4'
+                transcode.file = 'video_transcodes/' + new_name
+            transcode.processing = False
             transcode.error_messages = ''
             transcode.quality = quality
-            # Lock the transcode model
             transcode.save(update_fields=['processing', 'error_message',
-                                          'quality'])
-            TranscodingThread(transcode).start()
+                                            'quality', 'file'])
         else:
-            pass  # TODO Queue?
+            if transcode.processing is False:
+                transcode.processing = True
+                transcode.error_messages = ''
+                transcode.quality = quality
+                # Lock the transcode model
+                transcode.save(update_fields=['processing', 'error_message',
+                                            'quality'])
+                TranscodingThread(transcode).start()
+            else:
+                pass  # TODO Queue?
 
     class Meta:
         abstract = True
